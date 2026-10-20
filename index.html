@@ -1,0 +1,1155 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f7a4d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Aufnahme">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>DGX Heizungsaufnahme</title>
+<style>
+  :root {
+    --bg: #f3f5f2; --card: #ffffff; --ink: #18211c; --muted: #5b6a62; --line: #dce2dd;
+    --accent: #1f7a4d; --accent-ink: #ffffff; --accent-soft: #e2f1e8;
+    --warn-bg: #fff3d6; --warn-ink: #6e4b00; --info-bg: #dcf2f6; --info-ink: #0b4a63;
+    --danger: #b3261e; --invalid: #c62828; --field: #ffffff;
+    --bar-h: 76px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111613; --card: #1a211d; --ink: #e8eeea; --muted: #9aa8a0; --line: #2d3832;
+      --accent: #3fae75; --accent-ink: #08130d; --accent-soft: #1d3327;
+      --warn-bg: #3a2f12; --warn-ink: #f3d28a; --info-bg: #12343d; --info-ink: #a9e2f0;
+      --danger: #ff8a80; --invalid: #ff6b6b; --field: #141a17;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111613; --card: #1a211d; --ink: #e8eeea; --muted: #9aa8a0; --line: #2d3832;
+    --accent: #3fae75; --accent-ink: #08130d; --accent-soft: #1d3327;
+    --warn-bg: #3a2f12; --warn-ink: #f3d28a; --info-bg: #12343d; --info-ink: #a9e2f0;
+    --danger: #ff8a80; --invalid: #ff6b6b; --field: #141a17;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+    touch-action: manipulation; overscroll-behavior-y: none;
+  }
+  button, label, input, select, textarea { touch-action: manipulation; }
+  header.top {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left));
+    padding-top: max(8px, env(safe-area-inset-top));
+    background: var(--card); border-bottom: 1px solid var(--line);
+  }
+  .brand { font-weight: 700; font-size: 16px; line-height: 1.2; min-width: 0; }
+  .brand small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  main {
+    max-width: 680px; margin: 0 auto;
+    padding: 14px max(16px, env(safe-area-inset-right)) calc(var(--bar-h) + 40px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  h1 { font-size: 24px; line-height: 1.2; margin: 4px 0 4px; overflow-wrap: anywhere; }
+  h2 { font-size: 17px; margin: 0 0 12px; }
+  .lead { color: var(--muted); margin: 0 0 14px; }
+  .crumbs { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; margin: 0 0 12px;
+  }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+  .card-head h2 { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .card-head > span { display: flex; gap: 6px; flex-shrink: 0; }
+  .opt { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .field { display: block; margin: 0 0 12px; min-width: 0; }
+  .field > span { display: block; font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+  input, select, textarea {
+    display: block; width: 100%; min-height: 50px; padding: 11px 12px;
+    font: inherit; font-size: 17px; color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: 11px;
+  }
+  input[type="date"] { -webkit-appearance: none; appearance: none; text-align: left; }
+  input::-webkit-date-and-time-value { text-align: left; }
+  textarea { min-height: 84px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .invalid, .chips.invalid { border-color: var(--invalid) !important; box-shadow: 0 0 0 1px var(--invalid); }
+  .chips.invalid { border-radius: 12px; padding: 4px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 8px; }
+  .grid-plz { display: grid; grid-template-columns: 100px 1fr; gap: 0 10px; }
+  .grid-year { display: grid; grid-template-columns: 84px 1fr; gap: 0 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+  .chip {
+    min-height: 46px; min-width: 54px; padding: 8px 15px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--field); color: var(--ink);
+    font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .typ-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 12px; }
+  .typ-grid .chip { border-radius: 12px; min-height: 52px; font-size: 18px; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    min-height: 54px; padding: 12px 16px; margin: 0 0 10px; border-radius: 13px;
+    font: inherit; font-size: 17px; font-weight: 650; cursor: pointer; text-align: center;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.soft { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); font-weight: 600; }
+  .btn.danger { color: var(--danger); }
+  .btn[disabled] { opacity: .6; cursor: progress; }
+  .btn svg { width: 22px; height: 22px; flex-shrink: 0; }
+  .link {
+    display: inline-flex; align-items: center; min-height: 40px; padding: 6px 12px; margin: 0;
+    background: none; border: 1px solid var(--line); border-radius: 10px; color: var(--ink);
+    font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .link.danger { color: var(--danger); }
+  .actionbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    display: flex; gap: 10px;
+    padding: 10px max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background: var(--card); border-top: 1px solid var(--line);
+  }
+  .actionbar .btn { margin: 0; }
+  .actionbar .btn.ghost { flex: 0 0 auto; width: auto; padding: 12px 14px; }
+  @media (min-width: 720px) { .actionbar { justify-content: center; } .actionbar .btn.primary { max-width: 480px; } }
+  .choice {
+    display: block; width: 100%; text-align: left; padding: 16px; margin: 0 0 10px;
+    border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    font: inherit; cursor: pointer;
+  }
+  .choice strong { display: block; font-size: 17px; }
+  .choice span { color: var(--muted); font-size: 14px; }
+  .choice.primary { border: 2px solid var(--accent); background: var(--accent-soft); }
+  .note { border-radius: 11px; padding: 10px 12px; font-size: 14px; margin: 0 0 12px; }
+  .note.info { background: var(--info-bg); color: var(--info-ink); }
+  .note.warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .note.ok { background: var(--accent-soft); color: var(--ink); }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; }
+  details { margin: 0 0 4px; font-size: 14px; color: var(--muted); }
+  details summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+  details ul { margin: 6px 0 0; padding-left: 18px; }
+  .hk { display: flex; gap: 10px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--line); }
+  .hk:first-child { border-top: 0; padding-top: 0; }
+  .hk-main { flex: 1; min-width: 0; }
+  .hk-title { font-weight: 650; overflow-wrap: anywhere; }
+  .hk-sub { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+  .hk-act { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+  .hk-warn { font-size: 13px; font-weight: 600; color: var(--warn-ink); background: var(--warn-bg); border-radius: 6px; padding: 1px 6px; display: inline-block; margin-top: 3px; }
+  .grid-abst { display: grid; grid-template-columns: 1fr 104px; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+  .grid-abst:first-child { border-top: 0; padding-top: 0; }
+  .grid-abst .field { margin: 0; }
+  .grid-abst .field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .grid-abst input { text-align: right; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; font-size: 15px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; overflow-wrap: anywhere; }
+  .filelist { list-style: none; padding: 0; margin: 0 0 12px; }
+  .filelist li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .filelist li span { overflow-wrap: anywhere; min-width: 0; }
+  .pick { position: relative; overflow: hidden; }
+  .pick input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 0; }
+  .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 0 0 12px; }
+  .photo { position: relative; aspect-ratio: 1; border-radius: 11px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo button {
+    position: absolute; top: 4px; right: 4px; width: 34px; height: 34px; border-radius: 50%;
+    border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 20px; line-height: 1; cursor: pointer;
+  }
+  .stats { display: flex; gap: 8px; margin: 0 0 12px; }
+  .stat { flex: 1 1 0; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 22px; }
+  .stat span { color: var(--muted); font-size: 12px; }
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(var(--bar-h) + 12px + env(safe-area-inset-bottom));
+    width: min(560px, calc(100% - 32px)); padding: 12px 16px; border-radius: 12px;
+    background: var(--ink); color: var(--bg); font-size: 15px; z-index: 50;
+    box-shadow: 0 6px 24px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .toast.show { opacity: 1; }
+  @media (max-width: 380px) {
+    dl { grid-template-columns: 1fr; gap: 0; }
+    dd { margin-bottom: 6px; }
+    .grid-plz { grid-template-columns: 90px 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">DGX Heizungsaufnahme<small id="hdr-sub">Heizlast &amp; hydraulischer Abgleich</small></div>
+  <button class="link" id="hdr-overview" data-action="overview" hidden>Übersicht</button>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="lib/xlsx.full.min.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script>
+'use strict';
+
+/* ================= Stammdaten ================= */
+const EMPFAENGER = 'info@dgx.eco';
+const STORE_KEY = 'dgx-heizungsaufnahme-v1';
+const SONST = 'Andere (eingeben)';
+const RAEUME = ['Wohnzimmer', 'Schlafzimmer', 'Kinderzimmer', 'Küche', 'Bad', 'WC', 'Flur', 'Arbeitszimmer', 'Esszimmer', 'Gästezimmer', 'Abstellraum', 'Treppenhaus'];
+const TYPEN = ['10', '11', '12', '20', '21', '22', '30', '33'];
+// Bautiefen Kermi therm-x2 Profil-K [mm]
+const KERMI_TIEFE = { '10': 61, '11': 61, '12': 64, '22': 100, '33': 155 };
+const HERSTELLER = {
+  'Danfoss': ['RA-N', 'RA-UN', 'RA-FN', 'RA-G', 'RA-DV (dynamisch)', 'RLV-KS (Ventilunterteil)', 'FHF (Verteiler) ohne Durchflussanzeige', 'FHF (Verteiler) mit Durchflussanzeige'],
+  'Heimeier (IMI)': ['V-exact II', 'V-exact', 'Standard', 'Eclipse', 'Calypso exact', 'Multilux', 'Vekolux (Ventilunterteil)'],
+  'Oventrop': ['AV 9', 'AV 6', 'A', 'RF', 'AQ', 'Multiflex (Ventilunterteil)'],
+  'Honeywell / Resideo': ['V2000', 'Verafix-VK (Ventilunterteil)'],
+  'Kermi (Ventileinsatz)': ['Ventileinsatz integriert'],
+  'Simplex': [],
+  'Comap': [],
+  'MNG': [],
+  'Schlösser': [],
+  'Unbekannt': [],
+};
+const DIMENSIONEN = ['DN 10 (3/8")', 'DN 15 (1/2")', 'DN 20 (3/4")', 'Unbekannt'];
+const AUFBAU = ['Durchgang', 'Eck', 'Axial', 'Winkeleck', 'Ventilunterteil / Ventilheizkörper', 'Unbekannt'];
+const ROHR = ['Kupfer', 'Stahl', 'Verbundrohr (Alu-PE-X)', 'Kunststoff (PE-X)', 'Edelstahl', 'Unbekannt'];
+const VENTIL_KOPIE = ['hersteller', 'hersteller_sonst', 'modell', 'dimension', 'dimension_sonst', 'aufbau', 'aufbau_sonst', 'rohr', 'rohr_sonst'];
+
+const ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>';
+const ICON_IMG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>';
+const ICON_FILE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></svg>';
+
+/* ================= Hilfsfunktionen ================= */
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const today = () => new Date().toISOString().slice(0, 10);
+const fmtDate = (iso) => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; };
+const num = (v) => { const s = String(v ?? '').trim().replace(',', '.'); if (!s) return ''; const n = Number(s); return Number.isFinite(n) ? n : v; };
+const val = (o, k) => (o[k] === SONST ? (o[k + '_sonst'] || '').trim() : (o[k] || ''));
+const typText = (h) => (h.typ === SONST ? (h.typ_sonst || '').trim() : h.typ);
+const slug = (s) => String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'x';
+const fmtSize = (b) => (b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB');
+const uid = () => 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+function getPath(path) {
+  return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), S);
+}
+function setPath(path, value) {
+  const keys = path.split('.');
+  const last = keys.pop();
+  const obj = keys.reduce((o, k) => (o[k] ??= {}), S);
+  obj[last] = value;
+}
+
+/* ================= Dateispeicher (IndexedDB, Fallback: Arbeitsspeicher) ================= */
+const files = (() => {
+  const mem = new Map();
+  let dbp = null;
+  function open() {
+    if (!dbp) {
+      dbp = new Promise((res, rej) => {
+        const r = indexedDB.open('dgx-heizungsaufnahme', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('files');
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+    }
+    return dbp;
+  }
+  async function tx(mode, fn) {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('files', mode);
+      const req = fn(t.objectStore('files'));
+      t.oncomplete = () => res(req && req.result);
+      t.onerror = () => rej(t.error);
+      t.onabort = () => rej(t.error);
+    });
+  }
+  return {
+    async put(id, blob) { try { await tx('readwrite', (s) => s.put(blob, id)); } catch { mem.set(id, blob); } },
+    async get(id) { try { const b = await tx('readonly', (s) => s.get(id)); if (b) return b; } catch {} return mem.get(id) || null; },
+    async del(id) { mem.delete(id); try { await tx('readwrite', (s) => s.delete(id)); } catch {} },
+    async keys() { try { return await tx('readonly', (s) => s.getAllKeys()); } catch { return [...mem.keys()]; } },
+    async clear() { mem.clear(); try { await tx('readwrite', (s) => s.clear()); } catch {} },
+  };
+})();
+
+// Verkleinert Fotos (Handy-Kameras liefern 3–8 MB). <img> berücksichtigt die EXIF-Drehung auf iOS und Android.
+async function compressImage(file, maxDim, quality) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * scale);
+    c.height = Math.round(img.naturalHeight * scale);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', quality));
+    return blob && blob.size < file.size ? blob : file;
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/* ================= Zustand ================= */
+function freshState() {
+  const y = new Date().getFullYear();
+  return {
+    v: 1,
+    screen: 'object',
+    meta: {
+      aufnehmender: '', datum: today(), eigentuemer: '', strasse: '', plz: '', ort: '', anzahlWE: '',
+      energietraeger: 'Gas', einheit: 'kWh',
+      verbrauch: [y - 3, y - 2, y - 1].map((j) => ({ jahr: String(j), wert: '' })),
+      bemerkung: '',
+    },
+    plaene: [],
+    units: [],
+    cur: { u: null, raum: '', edit: null, editUnit: null, ret: null },
+    draftUnit: null,
+    draftRoom: '',
+    draftHk: null,
+    exportedAt: null,
+  };
+}
+function migrateHk(h) {
+  if (!h) return;
+  if (!Array.isArray(h.fotos)) h.fotos = h.foto ? [h.foto] : [];
+  delete h.foto;
+}
+
+let S = freshState();
+let restored = false;
+try {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (raw) {
+    const saved = JSON.parse(raw);
+    if (saved && saved.v === 1) {
+      S = Object.assign(freshState(), saved);
+      S.units.forEach((u) => u.hk.forEach(migrateHk));
+      migrateHk(S.draftHk);
+      restored = S.units.length > 0 || !!S.meta.eigentuemer;
+    }
+  }
+} catch {}
+
+// Daten auf dem Gerät vor automatischem Löschen durch den Browser schützen (v. a. iOS)
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+
+let persistTimer = null;
+let storageWarned = false;
+function persist() {
+  clearTimeout(persistTimer);
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(S));
+  } catch {
+    if (!storageWarned) { storageWarned = true; toast('Hinweis: Zwischenspeichern ist in diesem Browser nicht möglich. Bitte die Seite nicht schließen.'); }
+  }
+}
+function persistSoon() { clearTimeout(persistTimer); persistTimer = setTimeout(persist, 300); }
+addEventListener('pagehide', persist);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') persist(); });
+
+async function gcFiles() {
+  try {
+    const keep = new Set([
+      ...S.plaene.map((p) => p.id),
+      ...S.units.flatMap((u) => u.hk.flatMap((h) => h.fotos.map((f) => f.id))),
+      ...(S.draftHk ? S.draftHk.fotos.map((f) => f.id) : []),
+    ]);
+    for (const k of await files.keys()) if (!keep.has(k)) await files.del(k);
+  } catch {}
+}
+
+const curUnit = () => S.units[S.cur.u];
+const hkNr = (u, i) => `${u.nr}-${i + 1}`;
+const totalHk = () => S.units.reduce((n, u) => n + u.hk.length, 0);
+const totalFotos = () => S.units.reduce((n, u) => n + u.hk.reduce((m, h) => m + h.fotos.length, 0), 0);
+const nextUnitNr = () => S.units.reduce((m, u) => Math.max(m, parseInt(u.nr, 10) || 0), 0) + 1;
+const dataStamp = () => JSON.stringify([S.meta, S.plaene, S.units]);
+
+function newHkDraft(raum) {
+  const u = curUnit();
+  const prev = u.hk[u.hk.length - 1] || S.units.flatMap((x) => x.hk).pop();
+  const ventil = { hersteller: '', modell: '', dimension: '', aufbau: '', abstand: '', rohr: '' };
+  if (prev) for (const k of VENTIL_KOPIE) if (prev.ventil[k] !== undefined) ventil[k] = prev.ventil[k];
+  S.draftHk = { raum, breite: '', hoehe: '', tiefe: '', typ: '', typ_sonst: '', ventil, fotos: [], bemerkung: '', _kopiert: !!prev };
+}
+
+/* ================= Validierung & Toast ================= */
+let errs = new Set();
+let toastTimer = null;
+function toast(msg, ms = 3800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+function validate(list) {
+  const missing = list.filter(([p]) => !String(getPath(p) ?? '').trim());
+  errs = new Set(missing.map(([p]) => p));
+  if (!missing.length) return true;
+  render(true);
+  toast('Bitte ausfüllen: ' + missing.map(([, l]) => l).join(', '));
+  const first = document.querySelector('.invalid');
+  if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return false;
+}
+const OBJ_REQ = [
+  ['meta.aufnehmender', 'Aufgenommen von'], ['meta.datum', 'Datum'], ['meta.eigentuemer', 'Eigentümer'],
+  ['meta.strasse', 'Straße'], ['meta.plz', 'PLZ'], ['meta.ort', 'Ort'], ['meta.anzahlWE', 'Anzahl Wohneinheiten'],
+];
+function hkReq() {
+  const d = S.draftHk;
+  const req = [['draftHk.raum', 'Raum'], ['draftHk.breite', 'Breite'], ['draftHk.hoehe', 'Höhe'], ['draftHk.typ', 'Typ']];
+  if (d.typ === SONST) req.push(['draftHk.typ_sonst', 'Typ']);
+  req.push(['draftHk.ventil.hersteller', 'Ventil-Hersteller']);
+  if (d.ventil.hersteller === SONST) req.push(['draftHk.ventil.hersteller_sonst', 'Ventil-Hersteller']);
+  req.push(['draftHk.ventil.modell', 'Ventil-Modell']);
+  return req;
+}
+
+/* ================= Bausteine ================= */
+function field(label, path, o = {}) {
+  const v = getPath(path) ?? '';
+  const cls = errs.has(path) ? 'invalid' : '';
+  const attrs = [
+    o.inputmode && `inputmode="${o.inputmode}"`, o.ph && `placeholder="${esc(o.ph)}"`, o.list && `list="${o.list}"`,
+    `autocomplete="${o.autocomplete || 'off'}"`, `enterkeyhint="${o.enterkeyhint || 'next'}"`,
+    o.cap && 'autocapitalize="words"', o.pattern && `pattern="${o.pattern}"`,
+  ].filter(Boolean).join(' ');
+  const ctrl = o.type === 'textarea'
+    ? `<textarea data-bind="${path}" class="${cls}" ${attrs}>${esc(v)}</textarea>`
+    : `<input type="${o.type || 'text'}" data-bind="${path}" value="${esc(v)}" class="${cls}" ${attrs}>`;
+  return `<label class="field"><span>${label}${o.req ? ' *' : ''}</span>${ctrl}</label>`;
+}
+function selectOther(label, path, options, o = {}) {
+  const v = getPath(path) || '';
+  const opts = ['', ...options, SONST];
+  const sel = `<select data-bind="${path}" data-rerender class="${errs.has(path) ? 'invalid' : ''}">${opts
+    .map((x) => `<option value="${esc(x)}"${x === v ? ' selected' : ''}>${x ? esc(x) : 'Bitte wählen'}</option>`).join('')}</select>`;
+  const other = v === SONST ? field(label + ' (eingeben)', path + '_sonst', { req: o.req }) : '';
+  return `<label class="field"><span>${label}${o.req ? ' *' : ''}</span>${sel}</label>${other}`;
+}
+function chips(path, options, labelFn = (x) => x, cls = 'chips') {
+  const v = getPath(path);
+  return `<div class="${cls}${errs.has(path) ? ' invalid' : ''}">${options
+    .map((x) => `<button type="button" class="chip${v === x ? ' on' : ''}" data-action="set" data-path="${path}" data-value="${esc(x)}">${esc(labelFn(x))}</button>`)
+    .join('')}</div>`;
+}
+const btn = (label, action, cls = '', data = '') => `<button type="button" class="btn ${cls}" data-action="${action}" ${data}>${label}</button>`;
+const bar = (...buttons) => `<div class="actionbar">${buttons.join('')}</div>`;
+const choice = (title, sub, action, primary) =>
+  `<button type="button" class="choice${primary ? ' primary' : ''}" data-action="${action}"><strong>${title}</strong><span>${sub}</span></button>`;
+
+function ventilText(v) {
+  return [val(v, 'hersteller'), v.modell, val(v, 'dimension'), val(v, 'aufbau'), v.abstand && `${v.abstand} m`, val(v, 'rohr')].filter(Boolean).join(', ');
+}
+function hkList(u, ui, withActions) {
+  if (!u.hk.length) return '<p class="lead">Noch keine Heizkörper aufgenommen.</p>';
+  return u.hk.map((h, i) => `<div class="hk">
+      <div class="hk-main">
+        <div class="hk-title">${esc(hkNr(u, i))} · ${esc(h.raum)}${h.fotos.length ? ` <span class="opt">· ${h.fotos.length} Foto${h.fotos.length > 1 ? 's' : ''}</span>` : ''}</div>
+        <div class="hk-sub">${esc(h.breite)} × ${esc(h.hoehe)} cm · T ${esc(h.tiefe || '–')} mm · Typ ${esc(typText(h))}</div>
+        <div class="hk-sub">${esc(ventilText(h.ventil)) || '–'}</div>
+        ${withActions && !String(h.ventil.abstand).trim() ? '<span class="hk-warn">Abstand zum Kessel fehlt</span>' : ''}
+      </div>
+      ${withActions ? `<div class="hk-act"><button class="link" data-action="editHk" data-u="${ui}" data-i="${i}">Ändern</button><button class="link danger" data-action="delHk" data-u="${ui}" data-i="${i}" aria-label="Heizkörper ${esc(hkNr(u, i))} löschen">Löschen</button></div>` : ''}
+    </div>`).join('');
+}
+
+/* ================= Bildschirme ================= */
+const screens = {
+  object() {
+    const m = S.meta;
+    const editing = S.cur.ret === 'overview' || S.units.length > 0;
+    return `
+      ${restored && !S.units.length ? '<div class="note ok">Gespeicherter Entwurf wurde wiederhergestellt.</div>' : ''}
+      <h1>Objekt</h1>
+      <p class="lead">Grunddaten für Heizlastberechnung und hydraulischen Abgleich.</p>
+      <section class="card">
+        <h2>Aufnahme</h2>
+        ${field('Aufgenommen von', 'meta.aufnehmender', { req: 1, autocomplete: 'name', cap: 1 })}
+        ${field('Datum', 'meta.datum', { req: 1, type: 'date' })}
+      </section>
+      <section class="card">
+        <h2>Eigentümer &amp; Anschrift</h2>
+        ${field('Eigentümer', 'meta.eigentuemer', { req: 1, ph: 'Name / Firma / WEG', cap: 1 })}
+        ${field('Straße, Hausnummer', 'meta.strasse', { req: 1, autocomplete: 'address-line1', cap: 1 })}
+        <div class="grid-plz">
+          ${field('PLZ', 'meta.plz', { req: 1, inputmode: 'numeric', autocomplete: 'postal-code', pattern: '[0-9]*' })}
+          ${field('Ort', 'meta.ort', { req: 1, autocomplete: 'address-level2', cap: 1 })}
+        </div>
+        ${field('Anzahl Wohneinheiten', 'meta.anzahlWE', { req: 1, inputmode: 'numeric', pattern: '[0-9]*', ph: 'z. B. 6' })}
+      </section>
+      <section class="card">
+        <h2>Verbrauch letzte 3 Jahre <span class="opt">optional</span></h2>
+        ${chips('meta.energietraeger', ['Gas', 'Öl'])}
+        <div class="field"><span>Einheit</span></div>
+        ${chips('meta.einheit', ['kWh', 'Liter', 'm³'])}
+        ${m.verbrauch.map((_, i) => `<div class="grid-year">
+            ${field('Jahr', `meta.verbrauch.${i}.jahr`, { inputmode: 'numeric', pattern: '[0-9]*' })}
+            ${field(`Verbrauch [${esc(m.einheit)}]`, `meta.verbrauch.${i}.wert`, { inputmode: 'decimal', ph: 'z. B. 28500' })}
+          </div>`).join('')}
+      </section>
+      <section class="card">
+        <h2>Pläne <span class="opt">optional</span></h2>
+        ${S.plaene.length ? `<ul class="filelist">${S.plaene.map((p, i) => `<li><span>${esc(p.name)} <span class="opt">${fmtSize(p.size)}</span></span><button class="link danger" data-action="planRemove" data-i="${i}">Entfernen</button></li>`).join('')}</ul>` : ''}
+        <div class="grid2">
+          <label class="btn soft pick">${ICON_CAM} Abfotografieren<input type="file" data-plans accept="image/*" capture="environment"></label>
+          <label class="btn pick">${ICON_FILE} Datei / PDF<input type="file" data-plans accept="image/*,application/pdf" multiple></label>
+        </div>
+      </section>
+      <section class="card">
+        <h2>Bemerkung <span class="opt">optional</span></h2>
+        ${field('Hinweise zum Objekt', 'meta.bemerkung', { type: 'textarea', ph: 'z. B. Kessel im Keller, Baujahr, Besonderheiten' })}
+      </section>
+      ${bar(btn(editing ? 'Speichern' : 'Weiter: Wohneinheit 1', 'objectNext', 'primary'))}
+    `;
+  },
+
+  unit() {
+    const edit = S.cur.editUnit !== null;
+    const soll = parseInt(S.meta.anzahlWE, 10) || 0;
+    const quellen = S.units.map((u, i) => ({ u, i })).filter(({ u }) => u.hk.length);
+    const copy = S.draftUnit.copyFrom ?? '';
+    const src = copy !== '' ? S.units[+copy] : null;
+    return `
+      <div class="crumbs">${esc(S.meta.strasse)}</div>
+      <h1>${edit ? 'Wohneinheit bearbeiten' : 'Neue Wohneinheit'}</h1>
+      <p class="lead">${soll ? `Bisher aufgenommen: ${S.units.length} von ${soll} Wohneinheiten.` : ''}</p>
+      <section class="card">
+        ${field('Nummer der Wohneinheit', 'draftUnit.nr', { req: 1, inputmode: 'numeric' })}
+        ${field('Bezeichnung / Bewohner', 'draftUnit.name', { ph: 'z. B. EG links – Kahl (Locher)', cap: 1, enterkeyhint: 'done' })}
+      </section>
+      ${!edit && quellen.length ? `
+      <section class="card">
+        <h2>Baugleich wie …</h2>
+        <div class="chips">
+          <button type="button" class="chip${copy === '' ? ' on' : ''}" data-action="set" data-path="draftUnit.copyFrom" data-value="">Leer beginnen</button>
+          ${quellen.map(({ u, i }) => `<button type="button" class="chip${copy === String(i) ? ' on' : ''}" data-action="set" data-path="draftUnit.copyFrom" data-value="${i}">WE ${esc(u.nr)}</button>`).join('')}
+        </div>
+        ${src ? `<div class="note info">Übernimmt ${src.hk.length} Heizkörper aus WE ${esc(src.nr)}: Räume, Maße, Typen, Ventile. <b>Nicht</b> übernommen werden Fotos, Bemerkungen und Abstände zum Kessel. Die Abstände werden im nächsten Schritt eingetragen.</div>` : ''}
+      </section>` : ''}
+      ${bar(btn(S.units.length ? 'Abbrechen' : 'Zurück', 'unitBack', 'ghost'), btn(edit ? 'Speichern' : src ? 'Kopie anlegen' : 'Weiter: Raum', 'unitNext', 'primary'))}
+    `;
+  },
+
+  abstaende() {
+    const u = curUnit();
+    return `
+      <div class="crumbs">Wohneinheit ${esc(u.nr)}${u.name ? ' · ' + esc(u.name) : ''}</div>
+      <h1>Abstände zum Kessel</h1>
+      <p class="lead">Abstand Ventil → Kessel in Metern, für jeden Heizkörper einzeln.</p>
+      <section class="card">
+        ${u.hk.map((h, i) => `<div class="grid-abst">
+            <div><b>${esc(hkNr(u, i))}</b> · ${esc(h.raum)}<div class="hk-sub">${esc(h.breite)} × ${esc(h.hoehe)} cm · Typ ${esc(typText(h))}</div></div>
+            ${field('Meter', `units.${S.cur.u}.hk.${i}.ventil.abstand`, { inputmode: 'decimal', ph: 'm' })}
+          </div>`).join('')}
+      </section>
+      <p class="lead">Fotos und Abweichungen (z. B. anderer Heizkörper) über „Ändern“ in der Übersicht ergänzen.</p>
+      ${bar(btn('Übersicht', 'overview', 'ghost'), btn('Fertig', 'abstFertig', 'primary'))}
+    `;
+  },
+
+  room() {
+    const u = curUnit();
+    const vorhanden = [...new Set(u.hk.map((h) => h.raum))];
+    return `
+      <div class="crumbs">Wohneinheit ${esc(u.nr)}${u.name ? ' · ' + esc(u.name) : ''}</div>
+      <h1>Welcher Raum?</h1>
+      <p class="lead">Antippen oder eintippen, z. B. „Kinderzimmer 2“.</p>
+      <section class="card">
+        ${chips('draftRoom', RAEUME)}
+        ${field('Raum', 'draftRoom', { req: 1, cap: 1, enterkeyhint: 'done' })}
+        ${vorhanden.length ? `<div class="field"><span>Bereits aufgenommen</span></div>${chips('draftRoom', vorhanden)}` : ''}
+      </section>
+      ${u.hk.length ? btn(`Wohneinheit ${esc(u.nr)} abschließen`, 'unitFinish') : ''}
+      ${bar(btn('Zurück', 'roomBack', 'ghost'), btn('Weiter: Heizkörper', 'roomNext', 'primary'))}
+    `;
+  },
+
+  radiator() {
+    const u = curUnit();
+    const d = S.draftHk;
+    const edit = S.cur.edit !== null;
+    const nr = hkNr(u, edit ? S.cur.edit : u.hk.length);
+    const modelle = HERSTELLER[d.ventil.hersteller] || [];
+    return `
+      <div class="crumbs">Wohneinheit ${esc(u.nr)} › ${esc(d.raum)}</div>
+      <h1>Heizkörper ${esc(nr)}</h1>
+      <section class="card">
+        ${field('Raum', 'draftHk.raum', { req: 1, cap: 1 })}
+        <h2 style="margin-top:4px">Abmessungen</h2>
+        <div class="grid3">
+          ${field('Breite cm', 'draftHk.breite', { req: 1, inputmode: 'decimal', ph: '180' })}
+          ${field('Höhe cm', 'draftHk.hoehe', { req: 1, inputmode: 'decimal', ph: '60' })}
+          ${field('Tiefe mm', 'draftHk.tiefe', { inputmode: 'decimal', ph: '100' })}
+        </div>
+      </section>
+      <section class="card">
+        <h2>Typ *</h2>
+        ${chips('draftHk.typ', [...TYPEN, SONST], (x) => (x === SONST ? 'Andere' : x), 'typ-grid')}
+        ${d.typ === SONST ? field('Typ (eingeben)', 'draftHk.typ_sonst', { req: 1, ph: 'z. B. Gliederheizkörper, Badheizkörper' }) : ''}
+        <details><summary>Typen-Übersicht (Kermi therm-x2)</summary><ul>
+          <li><b>10</b>: einreihig, ohne Konvektor, ohne Verkleidung (61 mm)</li>
+          <li><b>11</b>: einreihig, ein Konvektor, mit Verkleidung (61 mm)</li>
+          <li><b>12</b>: zweireihig, ein Konvektor (64 mm)</li>
+          <li><b>22</b>: zweireihig, zwei Konvektoren (100 mm)</li>
+          <li><b>33</b>: dreireihig, drei Konvektoren (155 mm)</li>
+        </ul><p style="margin:6px 0 0">Die Kermi-Bautiefe wird vorgeschlagen, wenn „Tiefe“ leer ist.</p></details>
+      </section>
+      <section class="card">
+        <h2>Fotos <span class="opt">optional</span></h2>
+        ${d.fotos.length ? `<div class="photos">${d.fotos.map((f, k) => `<div class="photo"><img data-file="${esc(f.id)}" alt="Foto ${k + 1}"><button type="button" data-action="photoRemove" data-k="${k}" aria-label="Foto ${k + 1} entfernen">×</button></div>`).join('')}</div>` : ''}
+        <div class="grid2">
+          <label class="btn soft pick">${ICON_CAM} Kamera<input type="file" data-photo accept="image/*" capture="environment"></label>
+          <label class="btn pick">${ICON_IMG} Galerie<input type="file" data-photo accept="image/*" multiple></label>
+        </div>
+      </section>
+      <section class="card">
+        <h2>Thermostatventil</h2>
+        ${d._kopiert && !edit ? '<div class="note ok">Vom letzten Heizkörper übernommen. Bitte prüfen.</div>' : ''}
+        ${selectOther('Hersteller', 'draftHk.ventil.hersteller', Object.keys(HERSTELLER), { req: 1 })}
+        ${field('Modell', 'draftHk.ventil.modell', { req: 1, list: 'modelle', ph: 'auswählen oder eintippen' })}
+        <datalist id="modelle">${[...modelle, 'Unbekannt / nicht erkennbar'].map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
+        ${selectOther('Dimension', 'draftHk.ventil.dimension', DIMENSIONEN)}
+        ${selectOther('Aufbau', 'draftHk.ventil.aufbau', AUFBAU)}
+        ${field('Abstand Ventil → Kessel [m]', 'draftHk.ventil.abstand', { inputmode: 'decimal', ph: 'für jeden Heizkörper einzeln' })}
+        ${selectOther('Rohrmaterial', 'draftHk.ventil.rohr', ROHR)}
+      </section>
+      <section class="card">
+        <h2>Bemerkung <span class="opt">optional</span></h2>
+        ${field('Hinweise zu diesem Heizkörper', 'draftHk.bemerkung', { type: 'textarea', ph: 'z. B. Ventil schwergängig, hinter Verkleidung' })}
+      </section>
+      ${bar(btn('Abbrechen', 'hkCancel', 'ghost'), btn(edit ? 'Änderungen speichern' : 'Heizkörper speichern', 'hkSave', 'primary'))}
+    `;
+  },
+
+  next() {
+    const u = curUnit();
+    const i = u.hk.length - 1;
+    const h = u.hk[i];
+    return `
+      <div class="crumbs">Wohneinheit ${esc(u.nr)}${u.name ? ' · ' + esc(u.name) : ''}</div>
+      <p style="margin:6px 0 4px"><span class="badge">Gespeichert</span></p>
+      <h1>Heizkörper ${esc(hkNr(u, i))} · ${esc(h.raum)}</h1>
+      <p class="lead">${esc(h.breite)} × ${esc(h.hoehe)} cm, Typ ${esc(typText(h))}${h.fotos.length ? `, ${h.fotos.length} Foto${h.fotos.length > 1 ? 's' : ''}` : ''}. Wie geht es weiter?</p>
+      ${choice(`Weiterer Heizkörper im Raum „${esc(S.cur.raum)}“`, 'Im selben Raum ist noch ein Heizkörper.', 'sameRoom')}
+      ${choice('Nächsten Raum aufnehmen', 'Weiter mit dem nächsten Raum.', 'nextRoom', true)}
+      ${choice(`Wohneinheit ${esc(u.nr)} abschließen`, 'Alle Räume dieser Wohneinheit sind erfasst.', 'unitFinish')}
+      <section class="card" style="margin-top:18px">
+        <h2>Bisher in Wohneinheit ${esc(u.nr)} (${u.hk.length})</h2>
+        ${hkList(u, S.cur.u, false)}
+      </section>
+    `;
+  },
+
+  unitDone() {
+    const u = curUnit();
+    const soll = parseInt(S.meta.anzahlWE, 10) || 0;
+    const fehlt = soll > S.units.length;
+    return `
+      <p style="margin:6px 0 4px"><span class="badge">Abgeschlossen</span></p>
+      <h1>Wohneinheit ${esc(u.nr)} ist fertig</h1>
+      <div class="stats">
+        <div class="stat"><b>${new Set(u.hk.map((h) => h.raum)).size}</b><span>Räume</span></div>
+        <div class="stat"><b>${u.hk.length}</b><span>Heizkörper</span></div>
+        <div class="stat"><b>${S.units.length}${soll ? '/' + soll : ''}</b><span>Wohneinh.</span></div>
+      </div>
+      <h2>Weitere Wohneinheit aufnehmen?</h2>
+      ${choice(`Ja, baugleich wie WE ${esc(u.nr)}`, `Kopiert ${u.hk.length} Heizkörper, nur Abstände und Fotos neu erfassen.`, 'unitCopyCur', fehlt)}
+      ${choice('Ja, weitere Wohneinheit (leer)', fehlt ? `Es fehlen noch ${soll - S.units.length} von ${soll} Wohneinheiten.` : 'Nächste Wohneinheit beginnen.', 'unitNew')}
+      ${choice('Nein, fertig: Übersicht &amp; ZIP', 'Alles prüfen und ZIP-Datei erstellen.', 'overview', !fehlt)}
+    `;
+  },
+
+  overview() {
+    const m = S.meta;
+    const soll = parseInt(m.anzahlWE, 10) || 0;
+    const verbrauch = m.verbrauch.filter((v) => String(v.wert).trim());
+    const probleme = checkAll();
+    const ready = zipReady && zipReady.stamp === dataStamp() ? zipReady : null;
+    return `
+      <h1>Übersicht</h1>
+      <div class="stats">
+        <div class="stat"><b>${S.units.length}${soll ? '/' + soll : ''}</b><span>Wohneinh.</span></div>
+        <div class="stat"><b>${totalHk()}</b><span>Heizkörper</span></div>
+        <div class="stat"><b>${totalFotos()}</b><span>Fotos</span></div>
+      </div>
+      <section class="card">
+        <div class="card-head"><h2>Objekt</h2><button class="link" data-action="editObject">Ändern</button></div>
+        <dl>
+          <dt>Eigentümer</dt><dd>${esc(m.eigentuemer) || '–'}</dd>
+          <dt>Anschrift</dt><dd>${esc(m.strasse)}, ${esc(m.plz)} ${esc(m.ort)}</dd>
+          <dt>Aufnahme</dt><dd>${esc(m.aufnehmender)}, ${esc(fmtDate(m.datum))}</dd>
+          <dt>Verbrauch</dt><dd>${verbrauch.length ? esc(m.energietraeger) + ': ' + verbrauch.map((v) => `${esc(v.jahr)}: ${esc(v.wert)} ${esc(m.einheit)}`).join('<br>') : '–'}</dd>
+          <dt>Pläne</dt><dd>${S.plaene.length ? S.plaene.map((p) => esc(p.name)).join('<br>') : '–'}</dd>
+          ${m.bemerkung ? `<dt>Bemerkung</dt><dd>${esc(m.bemerkung)}</dd>` : ''}
+        </dl>
+      </section>
+      ${S.units.map((u, ui) => `
+        <section class="card">
+          <div class="card-head">
+            <h2>WE ${esc(u.nr)}${u.name ? ' · ' + esc(u.name) : ''}</h2>
+            <span><button class="link" data-action="editUnit" data-u="${ui}">Ändern</button><button class="link danger" data-action="delUnit" data-u="${ui}" aria-label="Wohneinheit ${esc(u.nr)} löschen">Löschen</button></span>
+          </div>
+          ${hkList(u, ui, true)}
+          ${u.hk.some((h) => !String(h.ventil.abstand).trim()) ? `<button class="btn" data-action="editAbst" data-u="${ui}" style="margin:12px 0 0">Abstände eintragen</button>` : ''}
+          <div class="grid2" style="margin-top:12px">
+            <button class="btn soft" data-action="addHk" data-u="${ui}" style="margin:0">+ Heizkörper</button>
+            <button class="btn" data-action="dupUnit" data-u="${ui}" style="margin:0" ${u.hk.length ? '' : 'disabled'}>Duplizieren</button>
+          </div>
+        </section>`).join('')}
+      ${btn('+ Weitere Wohneinheit', 'unitNew')}
+      <section class="card" id="export" style="margin-top:18px">
+        <h2>ZIP-Datei erstellen</h2>
+        ${probleme.map((p) => `<div class="note warn">${esc(p)}</div>`).join('')}
+        ${soll && soll !== S.units.length ? `<div class="note warn">Angegeben sind ${soll} Wohneinheiten, aufgenommen wurden ${S.units.length}.</div>` : ''}
+        ${ready ? `
+          <div class="note ok"><b>${esc(ready.name)}</b><br>${fmtSize(ready.blob.size)} · Excel, ${totalFotos()} Fotos${S.plaene.length ? `, ${S.plaene.length} Pläne` : ''}</div>
+          ${canShareFiles ? btn('ZIP teilen (Mail, Dateien …)', 'shareZip', 'primary') : ''}
+          ${btn('ZIP herunterladen', 'downloadZip', canShareFiles ? '' : 'primary')}
+          <p class="lead" style="margin:4px 0 0">Bitte die ZIP-Datei an <b>${EMPFAENGER}</b> senden.</p>
+        ` : `
+          <p class="lead">Enthält die Excel-Tabelle, alle Fotos${S.plaene.length ? ', die Pläne' : ''} und eine Zusammenfassung.</p>
+          <button class="btn primary" data-action="makeZip" ${busy || probleme.length ? 'disabled' : ''}>${busy ? 'ZIP wird erstellt …' : 'ZIP-Datei erstellen'}</button>
+        `}
+      </section>
+      ${btn('Neue Aufnahme beginnen', 'reset', 'ghost danger')}
+    `;
+  },
+};
+
+function checkAll() {
+  const p = [];
+  const fehlend = OBJ_REQ.filter(([k]) => !String(getPath(k) ?? '').trim()).map(([, l]) => l);
+  if (fehlend.length) p.push('Objektdaten unvollständig: ' + fehlend.join(', '));
+  if (!S.units.length) p.push('Es wurde noch keine Wohneinheit aufgenommen.');
+  S.units.forEach((u) => { if (!u.hk.length) p.push(`Wohneinheit ${u.nr} hat noch keine Heizkörper.`); });
+  return p;
+}
+
+/* ================= Rendern ================= */
+let busy = false;
+let zipReady = null;
+let objectUrls = [];
+const canShareFiles = (() => {
+  try {
+    return !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'test.zip', { type: 'application/zip' })] }));
+  } catch { return false; }
+})();
+const app = document.getElementById('app');
+
+function render(keepScroll) {
+  if (!screens[S.screen] || (['room', 'radiator', 'next', 'unitDone', 'abstaende'].includes(S.screen) && !curUnit())
+      || (S.screen === 'radiator' && !S.draftHk) || (S.screen === 'unit' && !S.draftUnit)) {
+    S.screen = S.units.length ? 'overview' : 'object';
+  }
+  const y = window.scrollY;
+  objectUrls.forEach(URL.revokeObjectURL);
+  objectUrls = [];
+  app.innerHTML = screens[S.screen]();
+  document.getElementById('hdr-overview').hidden = !S.units.length || S.screen === 'overview';
+  const u = curUnit();
+  document.getElementById('hdr-sub').textContent = S.meta.strasse
+    ? `${S.meta.strasse}${u && S.screen !== 'overview' ? ' · WE ' + u.nr : ''}`
+    : 'Heizlast & hydraulischer Abgleich';
+  app.querySelectorAll('img[data-file]').forEach(async (img) => {
+    const b = await files.get(img.dataset.file);
+    if (b) { const url = URL.createObjectURL(b); objectUrls.push(url); img.src = url; }
+  });
+  window.scrollTo(0, keepScroll ? y : 0);
+}
+function go(screen) {
+  errs = new Set();
+  S.screen = screen;
+  persist();
+  render(false);
+}
+
+/* ================= Aktionen ================= */
+function startUnit(copyFrom = null) {
+  S.cur.editUnit = null;
+  S.draftUnit = { nr: String(nextUnitNr()), name: '', copyFrom: copyFrom === null ? '' : String(copyFrom) };
+  go('unit');
+}
+
+// Baugleiche Wohneinheit: Heizkörper übernehmen, aber Fotos, Bemerkungen und Abstände
+// zum Kessel nicht – die unterscheiden sich je Wohneinheit.
+function copyHeizkoerper(src) {
+  return src.hk.map((h) => ({ ...clone(h), fotos: [], bemerkung: '', ventil: { ...clone(h.ventil), abstand: '' } }));
+}
+
+const actions = {
+  set(d) {
+    setPath(d.path, d.value);
+    if (d.path === 'draftHk.typ') {
+      const h = S.draftHk;
+      const t = KERMI_TIEFE[d.value];
+      if (t && (!String(h.tiefe).trim() || h._tiefeAuto)) { h.tiefe = String(t); h._tiefeAuto = true; }
+    }
+    errs.delete(d.path);
+    persist();
+    render(true);
+  },
+  objectNext() {
+    if (!validate(OBJ_REQ)) return;
+    if (S.cur.ret === 'overview' || S.units.length) { S.cur.ret = null; go('overview'); } else startUnit();
+  },
+  unitNext() {
+    if (!validate([['draftUnit.nr', 'Nummer der Wohneinheit']])) return;
+    const d = { nr: S.draftUnit.nr.trim(), name: (S.draftUnit.name || '').trim() };
+    const dup = S.units.findIndex((u, i) => u.nr === d.nr && i !== S.cur.editUnit);
+    if (dup >= 0) { toast(`Wohneinheit ${d.nr} gibt es schon. Bitte eine andere Nummer wählen.`); return; }
+    if (S.cur.editUnit !== null) {
+      Object.assign(S.units[S.cur.editUnit], d);
+      S.cur.editUnit = null;
+      S.draftUnit = null;
+      go('overview');
+    } else {
+      const src = S.draftUnit.copyFrom !== '' && S.draftUnit.copyFrom != null ? S.units[+S.draftUnit.copyFrom] : null;
+      S.units.push({ ...d, hk: src ? copyHeizkoerper(src) : [], done: !!src, kopieVon: src ? src.nr : undefined });
+      S.cur.u = S.units.length - 1;
+      S.draftUnit = null;
+      S.draftRoom = '';
+      go(src ? 'abstaende' : 'room');
+    }
+  },
+  unitCopyCur() { startUnit(S.cur.u); },
+  dupUnit(d) { startUnit(+d.u); },
+  editAbst(d) { S.cur.u = +d.u; go('abstaende'); },
+  abstFertig() {
+    const offen = curUnit().hk.filter((h) => !String(h.ventil.abstand).trim()).length;
+    if (offen) toast(offen === 1
+      ? 'Hinweis: 1 Abstand ist noch offen und lässt sich später in der Übersicht nachtragen.'
+      : `Hinweis: ${offen} Abstände sind noch offen und lassen sich später in der Übersicht nachtragen.`);
+    go('unitDone');
+  },
+  unitBack() {
+    S.cur.editUnit = null;
+    S.draftUnit = null;
+    go(S.units.length ? 'overview' : 'object');
+  },
+  roomNext() {
+    if (!validate([['draftRoom', 'Raum']])) return;
+    S.cur.raum = S.draftRoom.trim();
+    S.cur.edit = null;
+    newHkDraft(S.cur.raum);
+    go('radiator');
+  },
+  roomBack() {
+    const u = curUnit();
+    if (u.hk.length) { go('next'); return; }
+    // Leere Wohneinheit verwerfen und zurück zu deren Daten
+    S.units.splice(S.cur.u, 1);
+    S.draftUnit = { nr: u.nr, name: u.name };
+    S.cur.editUnit = null;
+    go('unit');
+  },
+  hkSave() {
+    if (!validate(hkReq())) return;
+    const h = clone(S.draftHk);
+    h.raum = h.raum.trim();
+    delete h._kopiert;
+    delete h._tiefeAuto;
+    const u = curUnit();
+    if (S.cur.edit !== null) {
+      u.hk[S.cur.edit] = h;
+      S.cur.edit = null;
+      S.draftHk = null;
+      go('overview');
+      gcFiles();
+    } else {
+      u.hk.push(h);
+      u.done = false;
+      S.cur.raum = h.raum;
+      S.draftHk = null;
+      go('next');
+    }
+  },
+  hkCancel() {
+    const editing = S.cur.edit !== null;
+    S.cur.edit = null;
+    S.draftHk = null;
+    go(editing ? 'overview' : curUnit().hk.length ? 'next' : 'room');
+    gcFiles();
+  },
+  sameRoom() { newHkDraft(S.cur.raum); go('radiator'); },
+  nextRoom() { S.draftRoom = ''; go('room'); },
+  unitFinish() { curUnit().done = true; go('unitDone'); },
+  unitNew() { startUnit(); },
+  overview() { go('overview'); },
+  editObject() { S.cur.ret = 'overview'; go('object'); },
+  editUnit(d) {
+    const u = S.units[+d.u];
+    S.cur.editUnit = +d.u;
+    S.draftUnit = { nr: u.nr, name: u.name };
+    go('unit');
+  },
+  delUnit(d) {
+    const u = S.units[+d.u];
+    if (!confirm(`Wohneinheit ${u.nr} mit ${u.hk.length} Heizkörpern löschen?`)) return;
+    S.units.splice(+d.u, 1);
+    S.cur.u = null;
+    persist();
+    render(true);
+    gcFiles();
+  },
+  addHk(d) { S.cur.u = +d.u; S.draftRoom = ''; go('room'); },
+  editHk(d) {
+    S.cur.u = +d.u;
+    S.cur.edit = +d.i;
+    S.draftHk = clone(S.units[+d.u].hk[+d.i]);
+    S.cur.raum = S.draftHk.raum;
+    go('radiator');
+  },
+  delHk(d) {
+    const u = S.units[+d.u];
+    if (!confirm(`Heizkörper ${hkNr(u, +d.i)} (${u.hk[+d.i].raum}) löschen? Die folgenden Nummern rücken nach.`)) return;
+    u.hk.splice(+d.i, 1);
+    persist();
+    render(true);
+    gcFiles();
+  },
+  photoRemove(d) { S.draftHk.fotos.splice(+d.k, 1); persist(); render(true); },
+  planRemove(d) { S.plaene.splice(+d.i, 1); persist(); render(true); gcFiles(); },
+  makeZip() { makeZip(); },
+  shareZip() { shareZip(); },
+  downloadZip() { if (zipReady) downloadBlob(zipReady.blob, zipReady.name); },
+  async reset() {
+    const msg = S.exportedAt
+      ? 'Neue Aufnahme beginnen? Die aktuelle Aufnahme wird vom Gerät gelöscht (ZIP wurde bereits erstellt).'
+      : 'Achtung: Für diese Aufnahme wurde noch keine ZIP-Datei erstellt. Wirklich alles löschen und neu beginnen?';
+    if (!confirm(msg)) return;
+    await files.clear();
+    try { localStorage.removeItem(STORE_KEY); } catch {}
+    S = freshState();
+    zipReady = null;
+    restored = false;
+    go('object');
+  },
+};
+
+/* ================= Ereignisse ================= */
+app.addEventListener('input', (e) => {
+  const el = e.target;
+  const p = el.dataset.bind;
+  if (!p) return;
+  setPath(p, el.value);
+  if (p === 'draftHk.tiefe') S.draftHk._tiefeAuto = false;
+  if (errs.delete(p)) el.classList.remove('invalid');
+  persistSoon();
+});
+// Enter springt ins nächste Feld (Handy-Tastatur „Weiter“)
+app.addEventListener('keydown', (e) => {
+  const el = e.target;
+  if (e.key !== 'Enter' || el.tagName !== 'INPUT' || el.type === 'file') return;
+  e.preventDefault();
+  const fields = [...app.querySelectorAll('input:not([type=file]), select, textarea')];
+  const next = fields[fields.indexOf(el) + 1];
+  if (next) next.focus(); else el.blur();
+});
+app.addEventListener('change', async (e) => {
+  const el = e.target;
+  if (el.dataset.bind !== undefined && el.hasAttribute('data-rerender')) { setPath(el.dataset.bind, el.value); persist(); render(true); return; }
+  if (el.dataset.photo !== undefined && el.files.length) {
+    const list = [...el.files];
+    el.value = '';
+    toast(list.length > 1 ? `${list.length} Fotos werden verarbeitet …` : 'Foto wird verarbeitet …', 1500);
+    for (const f of list) {
+      const blob = await compressImage(f, 1600, 0.72);
+      const id = uid();
+      await files.put(id, blob);
+      if (S.draftHk) S.draftHk.fotos.push({ id, size: blob.size });
+    }
+    persist();
+    render(true);
+  }
+  if (el.dataset.plans !== undefined && el.files.length) {
+    const list = [...el.files];
+    el.value = '';
+    for (const f of list) {
+      const blob = f.type.startsWith('image/') ? await compressImage(f, 2600, 0.85) : f;
+      // Kamera-Fotos heißen auf iOS immer „image.jpg“ – dann fortlaufend benennen
+      const base = f.name && !/^image\.\w+$/i.test(f.name) ? f.name.replace(/\.[^.]+$/, '') : `Plan_${S.plaene.length + 1}`;
+      const ext = blob.type === 'image/jpeg' ? '.jpg' : (f.name.match(/\.[^.]+$/) || [''])[0];
+      const id = uid();
+      await files.put(id, blob);
+      S.plaene.push({ id, name: base + ext, size: blob.size });
+    }
+    persist();
+    render(true);
+  }
+});
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-action]');
+  if (!b || b.disabled) return;
+  e.preventDefault();
+  const fn = actions[b.dataset.action];
+  if (fn) fn(b.dataset, b);
+});
+
+/* ================= Export ================= */
+const HK_HEAD = ['Nr.', 'Raum', 'Breite [cm]', 'Höhe [cm]', 'Tiefe [mm]', 'Typ', 'Ventil Hersteller', 'Ventil Modell', 'Dimension', 'Aufbau', 'Abstand Ventil–Kessel [m]', 'Rohrmaterial', 'Fotos', 'Bemerkung'];
+const HK_COLS = [8, 16, 11, 10, 11, 8, 20, 30, 14, 18, 14, 18, 34, 30].map((wch) => ({ wch }));
+const fotoNames = (u, i, h) => h.fotos.map((_, k) => `Fotos/${hkNr(u, i)}_${slug(h.raum)}_${k + 1}.jpg`);
+function hkRow(u, h, i) {
+  const t = typText(h);
+  return [hkNr(u, i), h.raum, num(h.breite), num(h.hoehe), num(h.tiefe), /^\d+$/.test(t) ? Number(t) : t,
+    val(h.ventil, 'hersteller'), h.ventil.modell, val(h.ventil, 'dimension'), val(h.ventil, 'aufbau'),
+    num(h.ventil.abstand), val(h.ventil, 'rohr'), fotoNames(u, i, h).join(', '), h.bemerkung || ''];
+}
+const baseName = () => `Heizungsaufnahme_${slug(S.meta.eigentuemer)}_${slug(S.meta.strasse)}_${S.meta.datum || today()}`;
+
+function buildXlsx() {
+  const m = S.meta;
+  const wb = XLSX.utils.book_new();
+  const obj = [
+    ['Heizungsaufnahme – Heizlastberechnung & hydraulischer Abgleich'], [],
+    ['Eigentümer', m.eigentuemer], ['Straße, Nr.', m.strasse], ['PLZ, Ort', `${m.plz} ${m.ort}`],
+    ['Anzahl Wohneinheiten', num(m.anzahlWE)], ['Aufgenommene Wohneinheiten', S.units.length], ['Heizkörper gesamt', totalHk()],
+    ['Aufgenommen von', m.aufnehmender], ['Datum', fmtDate(m.datum)], [],
+    [`Energieverbrauch ${m.energietraeger}`], ['Jahr', `Verbrauch [${m.einheit}]`],
+    ...m.verbrauch.map((v) => [num(v.jahr), num(v.wert)]), [],
+    ['Pläne', S.plaene.map((p) => 'Plaene/' + p.name).join(', ') || '–'],
+    ['Bemerkung', m.bemerkung || ''],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(obj);
+  ws['!cols'] = [{ wch: 28 }, { wch: 50 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'Objekt');
+
+  const used = new Set(['Objekt', 'Alle Heizkörper']);
+  for (const u of S.units) {
+    const rows = [[`Wohnung ${u.nr}`, u.name || '', u.kopieVon ? `baugleich wie WE ${u.kopieVon}` : ''], HK_HEAD, ...u.hk.map((h, i) => hkRow(u, h, i))];
+    const s = XLSX.utils.aoa_to_sheet(rows);
+    s['!cols'] = HK_COLS;
+    let name = ('WE ' + u.nr).replace(/[\\/?*[\]:]/g, '-').slice(0, 31);
+    for (let k = 2; used.has(name); k++) name = `WE ${u.nr} (${k})`.slice(0, 31);
+    used.add(name);
+    XLSX.utils.book_append_sheet(wb, s, name);
+  }
+  const all = [['Wohneinheit', 'Bezeichnung', ...HK_HEAD], ...S.units.flatMap((u) => u.hk.map((h, i) => [u.nr, u.name || '', ...hkRow(u, h, i)]))];
+  const sa = XLSX.utils.aoa_to_sheet(all);
+  sa['!cols'] = [{ wch: 12 }, { wch: 22 }, ...HK_COLS];
+  XLSX.utils.book_append_sheet(wb, sa, 'Alle Heizkörper');
+
+  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+}
+
+function summaryText() {
+  const m = S.meta;
+  const lines = [
+    'Heizungsaufnahme – Heizlastberechnung & hydraulischer Abgleich', '',
+    `Eigentümer: ${m.eigentuemer}`,
+    `Anschrift: ${m.strasse}, ${m.plz} ${m.ort}`,
+    `Aufgenommen von: ${m.aufnehmender} am ${fmtDate(m.datum)}`,
+    `Wohneinheiten: ${m.anzahlWE} angegeben, ${S.units.length} aufgenommen · Heizkörper gesamt: ${totalHk()}`,
+  ];
+  const vb = m.verbrauch.filter((v) => String(v.wert).trim());
+  if (vb.length) lines.push(`Verbrauch ${m.energietraeger}: ` + vb.map((v) => `${v.jahr}: ${v.wert} ${m.einheit}`).join(' | '));
+  if (m.bemerkung) lines.push(`Bemerkung: ${m.bemerkung}`);
+  for (const u of S.units) {
+    lines.push('', `Wohnung ${u.nr}${u.name ? ' – ' + u.name : ''} (${u.hk.length} Heizkörper${u.kopieVon ? `, baugleich wie WE ${u.kopieVon}` : ''})`);
+    u.hk.forEach((h, i) => lines.push(`  ${hkNr(u, i)} ${h.raum}: ${h.breite}×${h.hoehe} cm, T ${h.tiefe || '–'} mm, Typ ${typText(h)} | ${ventilText(h.ventil)}${h.bemerkung ? ' | ' + h.bemerkung : ''}`));
+  }
+  return lines.join('\r\n');
+}
+
+async function buildZip() {
+  const zip = new JSZip();
+  const base = baseName();
+  zip.file(base + '.xlsx', buildXlsx());
+  zip.file('Zusammenfassung.txt', '﻿' + summaryText());
+  for (const u of S.units) {
+    for (const [i, h] of u.hk.entries()) {
+      const names = fotoNames(u, i, h);
+      for (const [k, f] of h.fotos.entries()) {
+        const b = await files.get(f.id);
+        if (b) zip.file(names[k], b, { compression: 'STORE' });
+      }
+    }
+  }
+  const usedNames = new Set();
+  for (const p of S.plaene) {
+    const b = await files.get(p.id);
+    if (!b) continue;
+    let name = p.name;
+    for (let k = 2; usedNames.has(name); k++) name = p.name.replace(/(\.[^.]+)?$/, `_${k}$1`);
+    usedNames.add(name);
+    zip.file('Plaene/' + name, b, { compression: 'STORE' });
+  }
+  // Fotos und Pläne sind schon komprimiert und werden nur abgelegt (STORE); Excel und Text werden gepackt.
+  const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/zip', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  return { blob, name: base + '.zip' };
+}
+
+async function makeZip() {
+  const probleme = checkAll();
+  if (probleme.length) { toast(probleme[0]); return; }
+  busy = true;
+  render(true);
+  try {
+    const z = await buildZip();
+    zipReady = { ...z, stamp: dataStamp() };
+    S.exportedAt = new Date().toISOString();
+    persist();
+  } catch (e) {
+    toast('ZIP konnte nicht erstellt werden: ' + e.message, 6000);
+  } finally {
+    busy = false;
+    render(true);
+    const ex = document.getElementById('export');
+    if (ex) ex.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+async function shareZip() {
+  if (!zipReady) return;
+  const file = new File([zipReady.blob], zipReady.name, { type: 'application/zip' });
+  try {
+    await navigator.share({ files: [file], title: zipReady.name, text: `Heizungsaufnahme ${S.meta.eigentuemer}, ${S.meta.strasse} – bitte an ${EMPFAENGER}` });
+  } catch (e) {
+    if (e && e.name !== 'AbortError') {
+      toast('Teilen nicht möglich – ZIP wird stattdessen heruntergeladen.');
+      downloadBlob(zipReady.blob, zipReady.name);
+    }
+  }
+}
+
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+
+render(false);
+gcFiles();
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
