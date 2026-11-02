@@ -1,6 +1,6 @@
 // Offline-Cache: Die App funktioniert nach dem ersten Öffnen auch ohne Netz (z. B. im Keller).
 // Nach Änderungen an der App die Versionsnummer erhöhen.
-const CACHE = 'dgx-aufnahme-v4';
+const CACHE = 'dgx-aufnahme-v5';
 const ASSETS = [
   './',
   './index.html',

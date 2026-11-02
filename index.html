@@ -18,7 +18,7 @@
     --bg: #f3f5f2; --card: #ffffff; --ink: #18211c; --muted: #5b6a62; --line: #dce2dd;
     --accent: #1f7a4d; --accent-ink: #ffffff; --accent-soft: #e2f1e8;
     --warn-bg: #fff3d6; --warn-ink: #6e4b00; --info-bg: #dcf2f6; --info-ink: #0b4a63;
-    --danger: #b3261e; --invalid: #c62828; --field: #ffffff;
+    --danger: #b3261e; --invalid: #c62828; --field: #ffffff; --rad-fill: #e9ecea;
     --bar-h: 76px;
     color-scheme: light;
   }
@@ -27,7 +27,7 @@
       --bg: #111613; --card: #1a211d; --ink: #e8eeea; --muted: #9aa8a0; --line: #2d3832;
       --accent: #3fae75; --accent-ink: #08130d; --accent-soft: #1d3327;
       --warn-bg: #3a2f12; --warn-ink: #f3d28a; --info-bg: #12343d; --info-ink: #a9e2f0;
-      --danger: #ff8a80; --invalid: #ff6b6b; --field: #141a17;
+      --danger: #ff8a80; --invalid: #ff6b6b; --field: #141a17; --rad-fill: #2a332e;
       color-scheme: dark;
     }
   }
@@ -35,7 +35,7 @@
     --bg: #111613; --card: #1a211d; --ink: #e8eeea; --muted: #9aa8a0; --line: #2d3832;
     --accent: #3fae75; --accent-ink: #08130d; --accent-soft: #1d3327;
     --warn-bg: #3a2f12; --warn-ink: #f3d28a; --info-bg: #12343d; --info-ink: #a9e2f0;
-    --danger: #ff8a80; --invalid: #ff6b6b; --field: #141a17;
+    --danger: #ff8a80; --invalid: #ff6b6b; --field: #141a17; --rad-fill: #2a332e;
     color-scheme: dark;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -97,8 +97,37 @@
     font: inherit; font-weight: 600; cursor: pointer;
   }
   .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .typ-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 12px; }
-  .typ-grid .chip { border-radius: 12px; min-height: 52px; font-size: 18px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 12px; }
+  .tiles.two { grid-template-columns: repeat(2, 1fr); }
+  .tiles.invalid { border-radius: 12px; padding: 4px; }
+  .tile {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0;
+    padding: 8px 6px 10px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--field); color: var(--ink); font: inherit; cursor: pointer; text-align: center;
+  }
+  .tile.on { border: 2px solid var(--accent); background: var(--accent-soft); padding: 7px 5px 9px; }
+  .tile b { font-size: 18px; line-height: 1.1; }
+  .tiles.two .tile b { font-size: 15px; }
+  .tile small { font-size: 12px; color: var(--muted); line-height: 1.25; }
+  .tile svg { width: 100%; height: auto; display: block; }
+  .tile.text-only { justify-content: center; min-height: 56px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend svg { width: 22px; height: 12px; }
+  /* Schemazeichnungen */
+  .sv-rad { fill: var(--rad-fill); stroke: var(--muted); stroke-width: 1.2; }
+  .sv-fin { stroke: var(--muted); stroke-width: .8; opacity: .55; }
+  .sv-pipe { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .sv-valve { fill: var(--ink); }
+  .sv-head { fill: var(--card); stroke: var(--ink); stroke-width: 1.6; }
+  .sv-rib { stroke: var(--ink); stroke-width: 1; opacity: .5; }
+  .sv-ground { stroke: var(--muted); stroke-width: 1.4; }
+  .sv-hatch { stroke: var(--muted); stroke-width: .8; opacity: .6; }
+  .sv-arrow { fill: var(--accent); }
+  .sv-wall { fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 3 2; }
+  .sv-panel { fill: var(--ink); }
+  .sv-conv { fill: none; stroke: var(--accent); stroke-width: 1.4; stroke-linejoin: round; }
+  .sv-cover { fill: none; stroke: var(--muted); stroke-width: 1.4; }
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
     min-height: 54px; padding: 12px 16px; margin: 0 0 10px; border-radius: 13px;
@@ -206,9 +235,19 @@ const EMPFAENGER = 'info@dgx.eco';
 const STORE_KEY = 'dgx-heizungsaufnahme-v1';
 const SONST = 'Andere (eingeben)';
 const RAEUME = ['Wohnzimmer', 'Schlafzimmer', 'Kinderzimmer', 'Küche', 'Bad', 'WC', 'Flur', 'Arbeitszimmer', 'Esszimmer', 'Gästezimmer', 'Abstellraum', 'Treppenhaus'];
-const TYPEN = ['10', '11', '12', '20', '21', '22', '30', '33'];
-// Bautiefen Kermi therm-x2 Profil-K [mm]
-const KERMI_TIEFE = { '10': 61, '11': 61, '12': 64, '22': 100, '33': 155 };
+// Heizkörpertypen: Aufbau von der Wand (oben) zum Raum (unten), P = Platte, K = Konvektor
+const TYPEN = [
+  { value: '10', sub: '1 Platte', rows: 'P' },
+  { value: '11', sub: '1 Platte, 1 Konvektor', rows: 'KP', cover: true },
+  { value: '12', sub: '2 Platten, 1 Konvektor', rows: 'PKP', cover: true },
+  { value: '20', sub: '2 Platten', rows: 'PP' },
+  { value: '21', sub: '2 Platten, 1 Konvektor', rows: 'PKP', cover: true },
+  { value: '22', sub: '2 Platten, 2 Konvektoren', rows: 'PKKP', cover: true },
+  { value: '30', sub: '3 Platten', rows: 'PPP' },
+  { value: '33', sub: '3 Platten, 3 Konvektoren', rows: 'PKPKKP', cover: true },
+];
+// Bautiefen Kermi therm-x2 Profil-K [cm]
+const KERMI_TIEFE = { '10': '6,1', '11': '6,1', '12': '6,4', '22': '10', '33': '15,5' };
 const HERSTELLER = {
   'Danfoss': ['RA-N', 'RA-UN', 'RA-FN', 'RA-G', 'RA-DV (dynamisch)', 'RLV-KS (Ventilunterteil)', 'FHF (Verteiler) ohne Durchflussanzeige', 'FHF (Verteiler) mit Durchflussanzeige'],
   'Heimeier (IMI)': ['V-exact II', 'V-exact', 'Standard', 'Eclipse', 'Calypso exact', 'Multilux', 'Vekolux (Ventilunterteil)'],
@@ -222,13 +261,95 @@ const HERSTELLER = {
   'Unbekannt': [],
 };
 const DIMENSIONEN = ['DN 10 (3/8")', 'DN 15 (1/2")', 'DN 20 (3/4")', 'Unbekannt'];
-const AUFBAU = ['Durchgang', 'Eck', 'Axial', 'Winkeleck', 'Ventilunterteil / Ventilheizkörper', 'Unbekannt'];
+// Ventilaufbau: Werte bleiben kompatibel zu bereits gespeicherten Aufnahmen
+const AUFBAU = [
+  { value: 'Durchgang', label: 'Durchgang', sub: 'Rohr und Anschluss in einer Linie, Kopf quer dazu' },
+  { value: 'Eck', label: 'Eck', sub: 'Rohr im 90°-Winkel (unten oder aus der Wand), Kopf in Rohrrichtung' },
+  { value: 'Axial', label: 'Axial', sub: 'Kopf zeigt seitlich vom Heizkörper weg' },
+  { value: 'Winkeleck', label: 'Winkeleck', sub: 'Rohr von hinten aus der Wand, Kopf seitlich (oft Badheizkörper)' },
+  { value: 'Ventilunterteil / Ventilheizkörper', label: 'Ventilheizkörper', sub: 'Ventil im Heizkörper, Anschluss unten' },
+];
 const ROHR = ['Kupfer', 'Stahl', 'Verbundrohr (Alu-PE-X)', 'Kunststoff (PE-X)', 'Edelstahl', 'Unbekannt'];
 const VENTIL_KOPIE = ['hersteller', 'hersteller_sonst', 'modell', 'dimension', 'dimension_sonst', 'aufbau', 'aufbau_sonst', 'rohr', 'rohr_sonst'];
 
 const ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>';
 const ICON_IMG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>';
 const ICON_FILE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></svg>';
+
+/* ================= Schemazeichnungen ================= */
+// Heizkörper-Querschnitt von oben: Wand oben, Raum unten
+function typSvg(rows, cover) {
+  const H = { P: 4, K: 7 };
+  const gap = 1.6;
+  const total = [...rows].reduce((s, r) => s + H[r], 0) + gap * (rows.length - 1);
+  let y = (46 - total) / 2 + 2;
+  let out = '';
+  for (const r of rows) {
+    if (r === 'P') out += `<rect class="sv-panel" x="10" y="${y}" width="80" height="4" rx="2"/>`;
+    else {
+      let d = `M12 ${y + H.K}`;
+      for (let x = 12, up = true; x < 88; x += 4, up = !up) d += ` L${x + 4} ${up ? y : y + H.K}`;
+      out += `<path class="sv-conv" d="${d}"/>`;
+    }
+    y += H[r] + gap;
+  }
+  if (cover) {
+    const top = (46 - total) / 2 - 1;
+    out += `<path class="sv-cover" d="M7 ${top + total + 4} V${top} H93 V${top + total + 4}"/>`;
+  }
+  return `<svg viewBox="0 0 100 48" aria-hidden="true">${out}</svg>`;
+}
+const LEGEND = `<div class="legend">
+  <span><svg viewBox="0 0 22 12"><rect class="sv-panel" x="1" y="4" width="20" height="4" rx="2"/></svg>Platte</span>
+  <span><svg viewBox="0 0 22 12"><path class="sv-conv" d="M1 10 L5 2 L9 10 L13 2 L17 10 L21 2"/></svg>Konvektor</span>
+  <span><svg viewBox="0 0 22 12"><path class="sv-cover" d="M2 11 V2 H20 V11"/></svg>Abdeckung</span>
+  <span>Ansicht von oben, Wand oben</span>
+</div>`;
+
+// Bausteine für die Ventil-Zeichnungen (Vorderansicht)
+const svRadiator = (x, y, w, h) => {
+  let fins = '';
+  for (let fx = x + 6; fx < x + w - 2; fx += 6) fins += `<line class="sv-fin" x1="${fx}" y1="${y + 3}" x2="${fx}" y2="${y + h - 3}"/>`;
+  return `<rect class="sv-rad" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/>${fins}`;
+};
+const svTowel = (x, y, w, h) => {
+  let bars = '';
+  for (let by = y + 6; by < y + h - 2; by += 7) bars += `<rect class="sv-rad" x="${x + 4}" y="${by}" width="${w - 8}" height="3.5" rx="1.5"/>`;
+  return `<rect class="sv-rad" x="${x}" y="${y}" width="4" height="${h}" rx="2"/><rect class="sv-rad" x="${x + w - 4}" y="${y}" width="4" height="${h}" rx="2"/>${bars}`;
+};
+const svValve = (cx, cy) => `<rect class="sv-valve" x="${cx - 7}" y="${cy - 7}" width="14" height="14" rx="3"/>`;
+const svHeadV = (cx, y1, y2) =>
+  `<rect class="sv-head" x="${cx - 9}" y="${y1}" width="18" height="${y2 - y1}" rx="5"/>` +
+  [-4, 0, 4].map((dx) => `<line class="sv-rib" x1="${cx + dx}" y1="${y1 + 4}" x2="${cx + dx}" y2="${y2 - 4}"/>`).join('');
+const svHeadH = (x1, x2, cy) =>
+  `<rect class="sv-head" x="${x1}" y="${cy - 9}" width="${x2 - x1}" height="18" rx="5"/>` +
+  [-4, 0, 4].map((dy) => `<line class="sv-rib" x1="${x1 + 4}" y1="${cy + dy}" x2="${x2 - 4}" y2="${cy + dy}"/>`).join('');
+const svFloor = (x1, x2, y) => {
+  let h = `<line class="sv-ground" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>`;
+  for (let x = x1 + 2; x < x2; x += 6) h += `<line class="sv-hatch" x1="${x}" y1="${y + 1}" x2="${x - 4}" y2="${y + 6}"/>`;
+  return h;
+};
+const svArrow = (x, y, dir) => {
+  const p = { up: `${x},${y - 5} ${x - 4},${y + 3} ${x + 4},${y + 3}`, right: `${x + 5},${y} ${x - 3},${y - 4} ${x - 3},${y + 4}` }[dir];
+  return `<polygon class="sv-arrow" points="${p}"/>`;
+};
+const AUFBAU_SVG = {
+  // Rohr waagerecht von der Seite, gerade durch das Ventil in den Heizkörper, Kopf nach oben
+  'Durchgang': svRadiator(74, 30, 50, 60) + `<path class="sv-pipe" d="M2 44 H74"/>` + svArrow(20, 44, 'right') + svValve(50, 44) + svHeadV(50, 8, 37),
+  // Rohr von unten, 90° in den Heizkörper, Kopf in Rohrrichtung (nach oben)
+  'Eck': svRadiator(74, 30, 50, 60) + svFloor(0, 70, 98) + `<path class="sv-pipe" d="M50 98 V44 H74"/>` + svArrow(50, 78, 'up') + svValve(50, 44) + svHeadV(50, 8, 37),
+  // Rohr von unten, Kopf waagerecht vom Heizkörper weg
+  'Axial': svRadiator(74, 30, 50, 60) + svFloor(0, 70, 98) + `<path class="sv-pipe" d="M48 98 V44 H74"/>` + svArrow(48, 78, 'up') + svValve(48, 44) + svHeadH(8, 41, 44),
+  // Badheizkörper: Rohr von hinten aus der Wand (Rosette), Anschluss nach oben, Kopf seitlich
+  'Winkeleck': svTowel(44, 4, 70, 48) + `<path class="sv-pipe" d="M64 52 V72"/>` +
+    `<circle class="sv-wall" cx="64" cy="74" r="14"/>` +
+    svValve(64, 74) + svHeadH(18, 57, 74),
+  // Ventil im Heizkörper, Kopf oben seitlich, Anschluss unten
+  'Ventilunterteil / Ventilheizkörper': svRadiator(4, 18, 88, 62) + svHeadH(92, 118, 28) +
+    `<rect class="sv-valve" x="70" y="80" width="18" height="6" rx="2"/>` + svFloor(40, 118, 98) +
+    `<path class="sv-pipe" d="M74 86 V98"/><path class="sv-pipe" d="M84 86 V98" style="opacity:.55"/>`,
+};
+const aufbauSvg = (v) => `<svg viewBox="0 0 120 100" aria-hidden="true">${AUFBAU_SVG[v]}</svg>`;
 
 /* ================= Hilfsfunktionen ================= */
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -331,6 +452,9 @@ function freshState() {
 }
 function migrateHk(h) {
   if (!h) return;
+  // Tiefe wurde bis Version 4 in mm erfasst. Kein Heizkörper ist über 30 cm tief, also sind größere Werte mm.
+  const t = num(h.tiefe);
+  if (typeof t === 'number' && t > 30) h.tiefe = String(Math.round(t) / 10).replace('.', ',');
   if (!Array.isArray(h.fotos)) h.fotos = h.foto ? [h.foto] : [];
   delete h.foto;
 }
@@ -455,6 +579,24 @@ function chips(path, options, labelFn = (x) => x, cls = 'chips') {
     .map((x) => `<button type="button" class="chip${v === x ? ' on' : ''}" data-action="set" data-path="${path}" data-value="${esc(x)}">${esc(labelFn(x))}</button>`)
     .join('')}</div>`;
 }
+// Bildkacheln zur Auswahl (Heizkörpertyp, Ventilaufbau)
+function tiles(path, items, cls = '') {
+  const v = getPath(path);
+  return `<div class="tiles ${cls}${errs.has(path) ? ' invalid' : ''}">${items.map((it) =>
+    `<button type="button" class="tile${it.svg ? '' : ' text-only'}${v === it.value ? ' on' : ''}" data-action="set" data-path="${path}" data-value="${esc(it.value)}" aria-pressed="${v === it.value}">
+      ${it.svg ? (cls.includes('two') ? it.svg + `<b>${esc(it.label)}</b>` : `<b>${esc(it.label)}</b>` + it.svg) : `<b>${esc(it.label)}</b>`}
+      ${it.sub ? `<small>${esc(it.sub)}</small>` : ''}
+    </button>`).join('')}</div>`;
+}
+const TYP_TILES = [
+  ...TYPEN.map((t) => ({ value: t.value, label: t.value, sub: t.sub, svg: typSvg(t.rows, t.cover) })),
+  { value: SONST, label: 'Andere', sub: 'z. B. Glieder-, Badheizkörper' },
+];
+const AUFBAU_TILES = [
+  ...AUFBAU.map((a) => ({ ...a, svg: aufbauSvg(a.value) })),
+  { value: 'Unbekannt', label: 'Unbekannt', sub: 'nicht erkennbar' },
+  { value: SONST, label: 'Andere', sub: 'selbst eingeben' },
+];
 const btn = (label, action, cls = '', data = '') => `<button type="button" class="btn ${cls}" data-action="${action}" ${data}>${label}</button>`;
 const bar = (...buttons) => `<div class="actionbar">${buttons.join('')}</div>`;
 const choice = (title, sub, action, primary) =>
@@ -468,7 +610,7 @@ function hkList(u, ui, withActions) {
   return u.hk.map((h, i) => `<div class="hk">
       <div class="hk-main">
         <div class="hk-title">${esc(hkNr(u, i))} · ${esc(h.raum)}${h.fotos.length ? ` <span class="opt">· ${h.fotos.length} Foto${h.fotos.length > 1 ? 's' : ''}</span>` : ''}</div>
-        <div class="hk-sub">${esc(h.breite)} × ${esc(h.hoehe)} cm · T ${esc(h.tiefe || '–')} mm · Typ ${esc(typText(h))}</div>
+        <div class="hk-sub">${esc(h.breite)} × ${esc(h.hoehe)} cm · T ${esc(h.tiefe || '–')} cm · Typ ${esc(typText(h))}</div>
         <div class="hk-sub">${esc(ventilText(h.ventil)) || '–'}</div>
         ${withActions && !String(h.ventil.abstand).trim() ? '<span class="hk-warn">Abstand zum Kessel fehlt</span>' : ''}
       </div>
@@ -602,20 +744,15 @@ const screens = {
         <div class="grid3">
           ${field('Breite cm', 'draftHk.breite', { req: 1, inputmode: 'decimal', ph: '180' })}
           ${field('Höhe cm', 'draftHk.hoehe', { req: 1, inputmode: 'decimal', ph: '60' })}
-          ${field('Tiefe mm', 'draftHk.tiefe', { inputmode: 'decimal', ph: '100' })}
+          ${field('Tiefe cm', 'draftHk.tiefe', { inputmode: 'decimal', ph: '10' })}
         </div>
       </section>
       <section class="card">
         <h2>Typ *</h2>
-        ${chips('draftHk.typ', [...TYPEN, SONST], (x) => (x === SONST ? 'Andere' : x), 'typ-grid')}
+        ${LEGEND}
+        ${tiles('draftHk.typ', TYP_TILES)}
         ${d.typ === SONST ? field('Typ (eingeben)', 'draftHk.typ_sonst', { req: 1, ph: 'z. B. Gliederheizkörper, Badheizkörper' }) : ''}
-        <details><summary>Typen-Übersicht (Kermi therm-x2)</summary><ul>
-          <li><b>10</b>: einreihig, ohne Konvektor, ohne Verkleidung (61 mm)</li>
-          <li><b>11</b>: einreihig, ein Konvektor, mit Verkleidung (61 mm)</li>
-          <li><b>12</b>: zweireihig, ein Konvektor (64 mm)</li>
-          <li><b>22</b>: zweireihig, zwei Konvektoren (100 mm)</li>
-          <li><b>33</b>: dreireihig, drei Konvektoren (155 mm)</li>
-        </ul><p style="margin:6px 0 0">Die Kermi-Bautiefe wird vorgeschlagen, wenn „Tiefe“ leer ist.</p></details>
+        <p class="opt" style="margin:0">Bei Kermi-Typen wird die Bautiefe vorgeschlagen, wenn „Tiefe“ leer ist.</p>
       </section>
       <section class="card">
         <h2>Fotos <span class="opt">optional</span></h2>
@@ -632,7 +769,9 @@ const screens = {
         ${field('Modell', 'draftHk.ventil.modell', { req: 1, list: 'modelle', ph: 'auswählen oder eintippen' })}
         <datalist id="modelle">${[...modelle, 'Unbekannt / nicht erkennbar'].map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
         ${selectOther('Dimension', 'draftHk.ventil.dimension', DIMENSIONEN)}
-        ${selectOther('Aufbau', 'draftHk.ventil.aufbau', AUFBAU)}
+        <div class="field"><span>Aufbau</span></div>
+        ${tiles('draftHk.ventil.aufbau', AUFBAU_TILES, 'two')}
+        ${d.ventil.aufbau === SONST ? field('Aufbau (eingeben)', 'draftHk.ventil.aufbau_sonst') : ''}
         ${field('Abstand Ventil → Kessel [m]', 'draftHk.ventil.abstand', { inputmode: 'decimal', ph: 'für jeden Heizkörper einzeln' })}
         ${selectOther('Rohrmaterial', 'draftHk.ventil.rohr', ROHR)}
       </section>
@@ -1009,7 +1148,7 @@ document.addEventListener('click', (e) => {
 });
 
 /* ================= Export ================= */
-const HK_HEAD = ['Nr.', 'Raum', 'Breite [cm]', 'Höhe [cm]', 'Tiefe [mm]', 'Typ', 'Ventil Hersteller', 'Ventil Modell', 'Dimension', 'Aufbau', 'Abstand Ventil–Kessel [m]', 'Rohrmaterial', 'Fotos', 'Bemerkung'];
+const HK_HEAD = ['Nr.', 'Raum', 'Breite [cm]', 'Höhe [cm]', 'Tiefe [cm]', 'Typ', 'Ventil Hersteller', 'Ventil Modell', 'Dimension', 'Aufbau', 'Abstand Ventil–Kessel [m]', 'Rohrmaterial', 'Fotos', 'Bemerkung'];
 const HK_COLS = [8, 16, 11, 10, 11, 8, 20, 30, 14, 18, 14, 18, 34, 30].map((wch) => ({ wch }));
 const fotoNames = (u, i, h) => h.fotos.map((_, k) => `Fotos/${hkNr(u, i)}_${slug(h.raum)}_${k + 1}.jpg`);
 function hkRow(u, h, i) {
@@ -1069,7 +1208,7 @@ function summaryText() {
   if (m.bemerkung) lines.push(`Bemerkung: ${m.bemerkung}`);
   for (const u of S.units) {
     lines.push('', `Wohnung ${u.nr}${u.name ? ' – ' + u.name : ''} (${u.hk.length} Heizkörper${u.kopieVon ? `, baugleich wie WE ${u.kopieVon}` : ''})`);
-    u.hk.forEach((h, i) => lines.push(`  ${hkNr(u, i)} ${h.raum}: ${h.breite}×${h.hoehe} cm, T ${h.tiefe || '–'} mm, Typ ${typText(h)} | ${ventilText(h.ventil)}${h.bemerkung ? ' | ' + h.bemerkung : ''}`));
+    u.hk.forEach((h, i) => lines.push(`  ${hkNr(u, i)} ${h.raum}: ${h.breite}×${h.hoehe} cm, T ${h.tiefe || '–'} cm, Typ ${typText(h)} | ${ventilText(h.ventil)}${h.bemerkung ? ' | ' + h.bemerkung : ''}`));
   }
   return lines.join('\r\n');
 }
